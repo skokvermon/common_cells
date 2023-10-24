@@ -14,6 +14,9 @@ filesets:
       - src/binary_to_gray.sv
       - src/cb_filter_pkg.sv
       - src/cdc_2phase.sv
+      - src/cdc_reset_ctrlr_pkg.sv
+      - src/cdc_reset_ctrlr.sv
+      - src/cdc_2phase_clearable.sv
       - src/cdc_4phase.sv
       - src/cf_math_pkg.sv
       - src/delta_counter.sv
