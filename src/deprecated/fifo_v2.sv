@@ -37,15 +37,15 @@ module fifo_v2 #(
     input  logic  pop_i             // pop head from queue
 );
 
-    logic [ADDR_DEPTH-1:0] usage;
+    logic [ADDR_DEPTH:0] usage;
 
     // generate threshold parameters
     if (DEPTH == 0) begin
         assign alm_full_o  = 1'b0; // that signal does not make any sense in a FIFO of depth 0
         assign alm_empty_o = 1'b0; // that signal does not make any sense in a FIFO of depth 0
     end else begin
-        assign alm_full_o   = (usage >= ALM_FULL_TH[ADDR_DEPTH-1:0]);
-        assign alm_empty_o  = (usage <= ALM_EMPTY_TH[ADDR_DEPTH-1:0]);
+        assign alm_full_o   = (usage >= ALM_FULL_TH[ADDR_DEPTH:0]);
+        assign alm_empty_o  = (usage <= ALM_EMPTY_TH[ADDR_DEPTH:0]);
     end
 
     fifo_v3 #(
