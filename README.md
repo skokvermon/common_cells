@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/pulp-platform/common_cells.svg?branch=master)](https://travis-ci.com/pulp-platform/common_cells)
+[![Build Status](https://github.com/pulp-platform/common_cells/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/pulp-platform/common_cells/actions/workflows/ci.yml?query=branch%3Amaster)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/pulp-platform/common_cells?color=blue&label=current&sort=semver)](CHANGELOG.md)
 [![SHL-0.51 license](https://img.shields.io/badge/license-SHL--0.51-green)](LICENSE)
 
@@ -15,14 +15,15 @@ Please note that cells with status *deprecated* are not to be used for new desig
 
 ### Clocks and Resets
 
-| Name                    | Description                                                                          | Status       | Superseded By |
-| ----------------------- | ------------------------------------------------------------------------------------ | ------------ | ------------- |
-| `clk_int_div`           | Arbitrary integer clock divier with config interface and 50% output clock duty cycle | active       |               |
-| `clk_div`               | Clock divider with integer divisor                                                   | *deprecated* | `clk_int_div` |
-| `clock_divider`         | Clock divider with configuration registers                                           | *deprecated* | `clk_int_div` |
-| `clock_divider_counter` | Clock divider using a counter                                                        | *deprecated* | `clk_int_div` |
-| `rstgen`                | Reset synchronizer                                                                   | active       |               |
-| `rstgen_bypass`         | Reset synchronizer with dedicated test reset bypass                                  | active       |               |
+| Name                    | Description                                                                           | Status       | Superseded By |
+|-------------------------|---------------------------------------------------------------------------------------|--------------|---------------|
+| `clk_int_div`           | Arbitrary integer clock divider with config interface and 50% output clock duty cycle | active       |               |
+| `clk_int_div_static`    | A convenience wrapper around `clk_int_div` with static division factor.               | active       |               |
+| `clk_div`               | Clock divider with integer divisor                                                    | *deprecated* | `clk_int_div` |
+| `clock_divider`         | Clock divider with configuration registers                                            | *deprecated* | `clk_int_div` |
+| `clock_divider_counter` | Clock divider using a counter                                                         | *deprecated* | `clk_int_div` |
+| `rstgen`                | Reset synchronizer                                                                    | active       |               |
+| `rstgen_bypass`         | Reset synchronizer with dedicated test reset bypass                                   | active       |               |
 
 ### Clock Domains and Asynchronous Crossings
 
@@ -35,6 +36,7 @@ Please note that cells with status *deprecated* are not to be used for new desig
 | `cdc_fifo_gray`                | Clock domain crossing FIFO using a gray-counter, with ready/valid interface                   | active       |               |
 | `cdc_fifo_gray_clearable`      | Identical to `cdc_fifo_gray` but supports one-sided async/sync resetting of either src or dst | active       |               |
 | `cdc_reset_ctrlr`              | Lock-step reset sequencer accross clock domains (internally used by clearable CDCs)           | active       |               |
+| `clk_mux_glitch_free`          | A glitch-free clock multiplexer with parametrizeable number of inputs.                        | active       |               |
 | `edge_detect`                  | Rising/falling edge detector                                                                  | active       |               |
 | `edge_propagator`              | Propagates a single-cycle pulse across an asynchronous clock domain crossing                  | active       |               |
 | `edge_propagator_ack`          | `edge_propagator` with sender-synchronous acknowledge pin (flags received pulse)              | active       |               |
@@ -64,8 +66,11 @@ Please note that cells with status *deprecated* are not to be used for new desig
 ### Data Path Elements
 
 | Name                       | Description                                                                                               | Status       | Superseded By |
-| -------------------------- | --------------------------------------------------------------------------------------------------------- | ------------ | ------------- |
-| `addr_decode   `           | Address map decoder                                                                                       | active       |               |
+|----------------------------|-----------------------------------------------------------------------------------------------------------|--------------|---------------|
+| `addr_decode`              | Address map decoder                                                                                       | active       |               |
+| `addr_decode_dync`         | Address map decoder extended to support dynamic online configuration                                      | active       |               |
+| `addr_decode_napot`        | Address map decoder using naturally-aligned power of two (NAPOT) regions                                  | active       |               |
+| `multiaddr_decode`         | Address map decoder using NAPOT regions and allowing for multiple address inputs                          | active       |               |
 | `ecc_decode`               | SECDED Decoder (Single Error Correction, Double Error Detection)                                          | active       |               |
 | `ecc_encode`               | SECDED Encoder (Single Error Correction, Double Error Detection)                                          | active       |               |
 | `binary_to_gray`           | Binary to gray code converter                                                                             | active       |               |
@@ -74,6 +79,7 @@ Please note that cells with status *deprecated* are not to be used for new desig
 | `lzc`                      | Leading/trailing-zero counter                                                                             | active       |               |
 | `onehot_to_bin`            | One-hot to binary converter                                                                               | active       |               |
 | `shift_reg`                | Shift register for arbitrary types                                                                        | active       |               |
+| `shift_reg_gated`          | Shift register with ICG for arbitrary types                                                               | active       |               |
 | `rr_arb_tree`              | Round-robin arbiter for req/gnt and vld/rdy interfaces with optional priority                             | active       |               |
 | `rrarbiter`                | Round-robin arbiter for req/ack interface with look-ahead                                                 | *deprecated* | `rr_arb_tree` |
 | `prioarbiter`              | Priority arbiter arbiter for req/ack interface with look-ahead                                            | *deprecated* | `rr_arb_tree` |
@@ -83,7 +89,9 @@ Please note that cells with status *deprecated* are not to be used for new desig
 | `stream_arbiter`           | Round-robin arbiter for ready/valid stream interface                                                      | active       |               |
 | `stream_arbiter_flushable` | Round-robin arbiter for ready/valid stream interface and flush functionality                              | active       |               |
 | `stream_demux`             | Ready/valid interface demultiplexer                                                                       | active       |               |
+| `lossy_valid_to_stream`    | Convert Valid-only to ready/valid by updating in-flight transaction                                       | active       |               |
 | `stream_join`              | Ready/valid handshake join multiple to one common                                                         | active       |               |
+| `stream_join_dynamic`      | Ready/valid handshake join multiple to one common, dynamically configurable subset selection              | active       |               |
 | `stream_mux`               | Ready/valid interface multiplexer                                                                         | active       |               |
 | `stream_register`          | Register with ready/valid interface                                                                       | active       |               |
 | `stream_fork`              | Ready/valid fork                                                                                          | active       |               |
@@ -93,23 +101,28 @@ Please note that cells with status *deprecated* are not to be used for new desig
 | `stream_to_mem`            | Use memories without flow control for output data in streams.                                             | active       |               |
 | `stream_xbar`              | Fully connected crossbar with ready/valid interface.                                                      | active       |               |
 | `stream_omega_net`         | One-way stream omega-net with ready/valid interface. Isomorphic to a butterfly.                           | active       |               |
+| `stream_throttle`          | Restrict the number of outstanding transfers in a stream.                                                 | active       |               |
 | `sub_per_hash`             | Substitution-permutation hash function                                                                    | active       |               |
 | `popcount`                 | Combinatorial popcount (hamming weight)                                                                   | active       |               |
+| `mem_to_banks_detailed`    | Split memory access over multiple parallel banks with detailed response signals                           | active       |               |
+| `mem_to_banks`             | Split memory access over multiple parallel banks                                                          | active       |               |
 
 ### Data Structures
 
-| Name               | Description                                     | Status       | Superseded By |
-| ------------------ | ----------------------------------------------- | ------------ | ------------- |
-| `cb_filter`        | Counting-Bloom-Filter with combinational lookup | active       |               |
-| `fifo`             | FIFO register with upper threshold              | *deprecated* | `fifo_v3`     |
-| `fifo_v2`          | FIFO register with upper and lower threshold    | *deprecated* | `fifo_v3`     |
-| `fifo_v3`          | FIFO register with generic fill counts          | active       |               |
-| `stream_fifo`      | FIFO register with ready/valid interface        | active       |               |
-| `generic_fifo`     | FIFO register without thresholds                | *deprecated* | `fifo_v3`     |
-| `generic_fifo_adv` | FIFO register without thresholds                | *deprecated* | `fifo_v3`     |
-| `sram`             | SRAM behavioral model                           | active       |               |
-| `plru_tree`        | Pseudo least recently used tree                 | active       |               |
-| `unread`           | Empty module to sink unconnected outputs into   | active       |               |
+| Name                       | Description                                                             | Status       | Superseded By |
+| -------------------------- | ----------------------------------------------------------------------- | ------------ | ------------- |
+| `cb_filter`                | Counting-Bloom-Filter with combinational lookup                         | active       |               |
+| `fifo`                     | FIFO register with upper threshold                                      | *deprecated* | `fifo_v3`     |
+| `fifo_v2`                  | FIFO register with upper and lower threshold                            | *deprecated* | `fifo_v3`     |
+| `fifo_v3`                  | FIFO register with generic fill counts                                  | active       |               |
+| `stream_fifo`              | FIFO register with ready/valid interface                                | active       |               |
+| `stream_fifo_optimal_wrap` | Wrapper that optimally selects either a spill register or a FIFO        | active       |               |
+| `generic_fifo`             | FIFO register without thresholds                                        | *deprecated* | `fifo_v3`     |
+| `generic_fifo_adv`         | FIFO register without thresholds                                        | *deprecated* | `fifo_v3`     |
+| `sram`                     | SRAM behavioral model                                                   | active       |               |
+| `plru_tree`                | Pseudo least recently used tree                                         | active       |               |
+| `unread`                   | Empty module to sink unconnected outputs into                           | active       |               |
+| `read`                     | Dummy module that prevents a signal from being removed during synthesis | active       |               |
 
 
 ## Header Contents

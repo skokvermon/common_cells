@@ -4,6 +4,100 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 1.32.0 - 2023-09-26
+### Added
+- Add `stream_join_dynamic`: `stream_join` with a dynamically configurable subset selection.
+- Add `multiaddr_decode`: Address map decoder using NAPOT regions and allowing for multiple address inputs.
+- Add `addr_decode_dync`: `addr_decode` with support for dynamic online configuration.
+
+### Changed
+- `mem_to_banks`: Change default value for `NumBanks` from `0` to `1` to avoid division by zero.
+
+## 1.31.1 - 2023-08-09
+### Fixed
+- `mem_to_banks`: Keep defaut values for localparams
+
+## 1.31.0 - 2023-08-08
+### Added
+- Add `mem_to_banks_detailed`: `mem_to_banks` with detailed response signals
+
+### Fixed
+- `unread`: Add dummy signal assignment when targeting Vivado to avoid blackbox inference
+
+## 1.30.0 - 2023-06-09
+### Added
+- Add `lossy_valid_to_stream`: A converter between valid-only protocols and ready-valid where the latest transaction overwrites the most recently queue one.
+- Add `clk_int_div_static`: A wrapper for `clk_int_div` for static clock division.
+
+### Changed
+- `popcount`: Refactor and support all input widths.
+- `clk_int_div`: Support clock output during reset.
+- `stream_delay`: Support larger counts.
+
+### Fixed
+- `clk_int_div`: Fix possible deadlock and avoid hold issues.
+
+## 1.29.0 - 2023-04-14
+### Added
+- Add `shift_reg_gated`: Shift register with ICG for arbitrary types.
+
+### Changed
+- CI: Run testbenches in `test/` on internal gitlab mirror.
+- `fifo_tb`: Add test for DEPTH not power of two.
+
+### Fixed
+- `clk_int_div`: Allow configuration while clock is disabled.
+- `mem_to_banks`: Cut possible timing loop for HideStrb feature.
+- Improved tool compatibility (Verilator, Questasim, Synopsys).
+
+## 1.28.0 - 2022-12-15
+### Added
+- Add `clk_mux_glitch_free`: A glitch-free clock multiplexer.
+
+## 1.27.1 - 2022-12-06
+### Fixed
+- `fall_through_register`: Remove superfluous `$size()` call for tool compatibility
+
+## 1.27.0 - 2022-12-01
+### Added
+- Add `mem_to_banks`: split memory access over multiple parallel banks. Moved from the `AXI4+ATOP`
+  [`axi_to_mem`](https://github.com/pulp-platform/axi/blob/2f395b176bee1c769c80f060a4345fda965bb04b/src/axi_to_mem.sv#L563) module.
+- Add `read`: dummy module that prevents a signal from being removed during synthesis
+
+### Changed
+- `stream_fifo_optimal_wrap`: Remove asserts
+- `fall_through_register`: Update fifo to `fifo_v3`
+
+### Fixed
+- FuseSoC: Add `assertions.svh`
+
+## 1.26.0 - 2022-08-26
+### Added
+- Add `stream_throttle`: restricts the number of outstanding transfers in a stream.
+
+### Changed
+- Allow out-of-bounds (i.e. `'0`) top end address in addr_map of `addr_decode` module for end of address space.
+- Update CI.
+
+## 1.25.0 - 2022-08-10
+### Added
+- Add `addr_decode_napot`: variant of `addr_decode` which uses a base address and mask instead of a start and end address.
+- Add `stream_fifo_optimal_wrap`: instantiates a more optimal `spill_register` instead of a `stream_fifo` for `depth == 2`.
+
+### Changed
+- Make `stream_register` truly stream by replacing internal FIFO with FFs.
+- Avoid using `$bits()` call in `id_queue`'s parameters.
+- Remove `cb_filter` and `cb_filter_pkg` from from Vivado IP packager project sources due to compatibility issues.
+- Use `tc_clk_mux` as glitch-free muxes in `rstgen_bypass` to avoid combinational glitches.
+- Avoid program blocks in testbenches for simulator compatibility.
+
+### Fixed
+- Update `src_files.yml` and `common_cells.core`
+
+## 1.24.1 - 2022-04-13
+### Fixed
+- Fix typos in `Bender.yml` and `src_files.yml`
+
 ## 1.24.0 - 2022-03-31
 ### Added
 - Add `edge_propagator_ack`: Edge/pulse propagator with sender-synchronous receive-acknowledge

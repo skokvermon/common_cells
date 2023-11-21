@@ -49,10 +49,9 @@ module id_queue #(
     parameter int ID_WIDTH  = 0,
     parameter int CAPACITY  = 0,
     parameter bit FULL_BW   = 0,
-    parameter type data_t   = logic,
+    parameter type data_t   = logic[31:0],
     // Dependent parameters, DO NOT OVERRIDE!
-    localparam type id_t    = logic[ID_WIDTH-1:0],
-    localparam type mask_t  = logic[$bits(data_t)-1:0]
+    localparam type id_t    = logic[ID_WIDTH-1:0]
 ) (
     input  logic    clk_i,
     input  logic    rst_ni,
@@ -63,7 +62,7 @@ module id_queue #(
     output logic    inp_gnt_o,
 
     input  data_t   exists_data_i,
-    input  mask_t   exists_mask_i,
+    input  data_t   exists_mask_i,
     input  logic    exists_req_i,
     output logic    exists_o,
     output logic    exists_gnt_o,
@@ -357,7 +356,7 @@ module id_queue #(
 
     // Exists Lookup
     for (genvar i = 0; i < CAPACITY; i++) begin: gen_lookup
-        mask_t exists_match_bits;
+        data_t exists_match_bits;
         for (genvar j = 0; j < $bits(data_t); j++) begin: gen_mask
             always_comb begin
                 if (linked_data_q[i].free) begin
@@ -406,7 +405,7 @@ module id_queue #(
 
     // Validate parameters.
 // pragma translate_off
-`ifndef VERILATOR
+`ifndef COMMON_CELLS_ASSERTS_OFF
     initial begin: validate_params
         assert (ID_WIDTH >= 1)
             else $fatal(1, "The ID must at least be one bit wide!");

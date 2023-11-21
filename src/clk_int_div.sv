@@ -28,7 +28,9 @@
 // clk_o will always be directly driven by clk_i. Use this mode for DFT of the
 // downstream logic.
 //
-// Parameters: DIV_VALUE_WIDTH: The number of bits to use for the internal
+// Parameters:
+//
+// DIV_VALUE_WIDTH: The number of bits to use for the internal
 // counter. Defines the maximum division factor.
 //
 // DEFAULT_DIV_VALUE: The default division factor to use after reset. Use this
@@ -36,9 +38,21 @@
 // configurability. An elaboration time error will be issued if the supplied
 // default div value is not repressentable with DIV_VALUE_WIDTH bits.
 //
-// ENABLE_CLOCK_IN_RESET: If 1'b1, clk_o will not be gated during reset and will
-// immediately start clocking with the configured DEFAULT_DIV_VALUE. (Disabled
-// by default).
+// ENABLE_CLOCK_IN_RESET: If 1'b1, the clock gate will be enabled during reset
+// which allows the clk_int_div instance to bypass the clock during reset, IFF
+// the DEFAULT_DIV_VALUE is 1. For all other DEFAULT_DIV_VALUES, the output
+// clock will not be available until rst_ni is deasserted!
+//
+// IMPORTANT!!!
+//
+// All clock gating/logic within this design is performed by dedicated clock logic
+// tech cells. By default the common_cell library uses the behavioral models in
+// the `tech_cells_generic` repository. However, for synthesis these cells need to be
+// mapped to dedicated cells from your standard cell library, preferably ones
+// that are designed for clock logic (they have balanced rise and fall time).
+// During synthesis you furthermore have to properly set `dont_touch` or
+// `size_only` attributes to prevent the logic synthesizer from replacing those
+// cells with regular logic gates which could end up being glitchty!
 //
 //-----------------------------------------------------------------------------
 // Copyright (C) 2022 ETH Zurich, University of Bologna Copyright and related
@@ -97,6 +111,13 @@ module clk_int_div #(
            DEFAULT_DIV_VALUE, DIV_VALUE_WIDTH);
   end
 
+  // We have to preset the div_q register with a value larger than one to avoid
+  // an infinite loop in the WAIT_END_PERIOD state. If the default state of the
+  // clock divider should be bypass, we thus always preset the div_q with 1
+  // rather than 1 or zero.
+  localparam int unsigned DivResetValue = (DEFAULT_DIV_VALUE != 0)? DEFAULT_DIV_VALUE: 1;
+
+  logic [DIV_VALUE_WIDTH-1:0] div_i_normalized;
   logic [DIV_VALUE_WIDTH-1:0] div_d, div_q;
   logic                       toggle_ffs_en;
   logic                       t_ff1_d, t_ff1_q;
@@ -115,11 +136,18 @@ module clk_int_div #(
 
   logic                         use_odd_division_d, use_odd_division_q;
   logic                         gate_en_d, gate_en_q;
+  logic                         gate_is_open_q;
   logic                         clear_cycle_counter;
   logic                         clear_toggle_flops;
 
   typedef enum logic[1:0] {IDLE, LOAD_DIV, WAIT_END_PERIOD} clk_gate_state_e;
   clk_gate_state_e clk_gate_state_d, clk_gate_state_q;
+
+  // Normalize the div_i value. div_i == 0 and div_i == 1 have the same meaning
+  // but actually loading 0 causes issues in the FSM. We thus always load 1 for
+  // both cases
+  assign div_i_normalized = (div_i != 0)? div_i : 1;
+
 
   //-------------------- Divider Load FSM --------------------
   always_comb begin
@@ -139,8 +167,8 @@ module clk_int_div #(
       IDLE: begin
         gate_en_d     = 1'b1;
         toggle_ffs_en = 1'b1;
-        if (en_i && div_valid_i) begin
-          if (div_i == div_q) begin
+        if (div_valid_i) begin
+          if (div_i_normalized == div_q) begin
             div_ready_o      = 1'b1;
           end else begin
             clk_gate_state_d = LOAD_DIV;
@@ -148,7 +176,7 @@ module clk_int_div #(
           end
         // If we disabled the clock output, stop the cycle counter and the
         // toggle flip-flops at the start of the next period to safe energy.
-        end else if (!en_i && ungated_output_clock == 1'b0) begin
+        end else if (!en_i && gate_is_open_q == 1'b0) begin
             cycle_counter_en                 = 1'b0;
             toggle_ffs_en                    = 1'b0;
         end
@@ -161,18 +189,18 @@ module clk_int_div #(
         // that the clock gate disable (gate_en) was latched and changing the
         // div_q and the cycle_counter_q value cannot affect the output clock
         // any longer.
-        if ((ungated_output_clock == 1'b0) || clk_div_bypass_en_q) begin
+        if ((gate_is_open_q == 1'b0) || clk_div_bypass_en_q) begin
           // Now clear the cycle counter and the toggle flip flops to have a
           // deterministic output phase (rising edge of output clock always
           // coincides with first rising edge of input clock when cycl_count_o
           // == 0).
           toggle_ffs_en           = 1'b0;
-          div_d                   = div_i;
+          div_d                   = div_i_normalized;
           div_ready_o             = 1'b1;
           clear_cycle_counter     = 1'b1;
           clear_toggle_flops      = 1'b1;
-          use_odd_division_d      = div_i[0];
-          clk_div_bypass_en_d     = (div_i == 0) || (div_i == 1);
+          use_odd_division_d      = div_i_normalized[0];
+          clk_div_bypass_en_d     = div_i_normalized == 1;
           clk_gate_state_d        = WAIT_END_PERIOD;
         end
       end
@@ -202,7 +230,7 @@ module clk_int_div #(
     if (!rst_ni) begin
       use_odd_division_q  <= UseOddDivisionResetValue;
       clk_div_bypass_en_q <= ClkDivBypassEnResetValue;
-      div_q               <= DEFAULT_DIV_VALUE;
+      div_q               <= DivResetValue;
       clk_gate_state_q    <= IDLE;
       gate_en_q           <= ENABLE_CLOCK_IN_RESET;
     end else begin
@@ -332,6 +360,22 @@ module clk_int_div #(
 
   //--------------------- Clock gate logic ---------------------
   // During the transitioning phase, we gate the clock to prevent clock glitches
+
+  // The gate_is_open_q signal is used by the FSM to determine whether the
+  // gate_en signal has been latched by the clock gate cell, i.e. if this signal
+  // is 1'b0, it means not only that the clock gate should be disabled but also that
+  // clk_o is currently LOW and thus the enable signal has been latched and the
+  // output clock will remain LOW until we enable the clock again.
+  // The FSM needs to know this to not disable the T-FFs and the cycle counter
+  // to early. Otherwise the clock might get stuck active high or we deassert a
+  // clock to early
+  always_ff @(posedge ungated_output_clock, negedge rst_ni) begin
+    if (!rst_ni) begin
+      gate_is_open_q <= 1'b0;
+    end else begin
+      gate_is_open_q <= gate_en_q & en_i;
+    end
+  end
 
   tc_clk_gating #(
     .IS_FUNCTIONAL(1) // The gate is required to prevent glitches during
