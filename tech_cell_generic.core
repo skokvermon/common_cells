@@ -1,0 +1,23 @@
+CAPI=2:
+
+name : pulp-platform.org::tech_cells_generic:0.2.13
+
+filesets:
+  xilinx:
+    files:
+      - src/rtl/tc_clk.sv
+      #- src/fpga/tc_clk_xilinx.sv
+    file_type : systemVerilogSource
+  xilinx:
+    files:
+      - src/rtl/tc_clk.sv
+    file_type : systemVerilogSource
+        
+targets:
+  default:
+    filesets : [xilinx]
+provider:
+  name : github
+  user : pulp-platform
+  repo : tech_cells_generic
+  version : v0.2.13
